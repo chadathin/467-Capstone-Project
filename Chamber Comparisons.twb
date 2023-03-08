@@ -421,7 +421,7 @@
     </worksheet>
   </worksheets>
   <dashboards>
-    <dashboard _.fcp.AccessibleZoneTabOrder.true...enable-sort-zone-taborder='true' name='Dashboard 1'>
+    <dashboard _.fcp.AccessibleZoneTabOrder.true...enable-sort-zone-taborder='true' name='Chamber Dashboard'>
       <style />
       <size sizing-mode='automatic' />
       <datasources>
@@ -523,8 +523,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='800' minheight='800' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='15' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='97694' id='14' param='vert' type-v2='layout-flow' w='98698' x='651' y='1153'>
+            <zone h='100000' id='19' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='97694' id='18' param='vert' type-v2='layout-flow' w='98698' x='651' y='1153'>
                 <zone fixed-size='280' h='48847' id='3' is-fixed='true' name='Symmetric Chambers' w='85679' x='651' y='1153'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -657,7 +657,7 @@
       </viewpoint>
       <simple-id uuid='{9B33E375-7AD9-4DBC-895C-D27EBC636CD3}' />
     </window>
-    <window class='dashboard' maximized='true' name='Dashboard 1'>
+    <window class='dashboard' maximized='true' name='Chamber Dashboard'>
       <viewpoints>
         <viewpoint name='Ambient Chambers'>
           <zoom type='entire-view' />
@@ -1177,7 +1177,7 @@
       9QIihJA4RW8AhBASpygBEEJInKIEQAghcYoSACGExClKAIQQEqcoARBCSJyiBEAIIXHq/wFm
       qSsfFpK/ogAAAABJRU5ErkJggg==
     </thumbnail>
-    <thumbnail height='384' name='Dashboard 1' width='384'>
+    <thumbnail height='384' name='Chamber Dashboard' width='384'>
       iVBORw0KGgoAAAANSUhEUgAAAYAAAAGACAYAAACkx7W/AAAACXBIWXMAAA7DAAAOwwHHb6hk
       AAAgAElEQVR4nOzdd2AUdf7/8eduNkt6DyE9gQChV0EQUBBRQQXuULEdImJB1FPPcqCc6FnO
       O8/zLGcFhUPU7ylEAamCgBQh9BJIQkhCIIW0TXY3W2bn90d+mTMXShKzZGPej39gd2d3XzOZ

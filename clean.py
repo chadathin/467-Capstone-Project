@@ -46,39 +46,39 @@ def main():
         return 3
     
     # Load CSV file (except tableau outputs tab-separated files, so set sep="\t")
+    print("Importing CSV file...")
     df = pd.read_csv(args[0], index_col = 'Minute of Date And Time', encoding='utf-16', sep="\t")
     
-    # Sanity check
-    print(df)
-    
     # Convert the date/time column (string) to datetime format
+    print("Converting string date and time to datetime...")
     df.index = pd.to_datetime(df.index, format='%B %d, %Y at %I:%M %p')
     
     # PIVOT TO WIDE FORM
+    print("Creating pivot table...")
     df_wide = df.pivot_table(index='Minute of Date And Time', columns='Chamber', values='Filtered Values')
     
     # free up some memory, no longer need df
     del df
     
     # Drop columns we don't care about (in this case, the asymmetric cols 4, 7, 9, 12)
+    print("Dropping chambers {}...".format(asymmetric_chambers))
     df_wide = df_wide.drop(asymmetric_chambers, axis=1)
     
     # How many rows before dropping incomplete data
     before = len(df_wide)
     
     # Drop incomplete rows
+    print("Dropping incomplete rows...")
     df_wide = df_wide.dropna()
     
     # Rows left after dropping incomplete data
     after = len(df_wide)
 
-    # Per cent loss of data
+    # Per cent loss of incomplete data
     loss = abs((after - before))/before
     
-    # Display the pivoted DataFrame
-    print(df_wide)
-    
     # Write out
+    print("Writing to 'out.csv'...")
     df_wide.to_csv('out.csv')
     
     # Get wide file size
@@ -89,7 +89,7 @@ def main():
     print("\nWrite complete")
     print("Long file size: {}".format(convert_size(long_file_size)))
     print("Wide file size: {}".format(convert_size(wide_file_size)))
-    print("Percent rows dropped (incomplete data): {:.2f}%".format(loss*100))
+    print("Percent rows dropped (incomplete data): {:.2f}%\n".format(loss*100))
 
     
     return 0

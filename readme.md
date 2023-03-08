@@ -1,0 +1,1 @@
+![Wide vs Long format](https://www.statology.org/wp-content/uploads/2021/12/wideLong1-1.png)
