@@ -4,19 +4,30 @@
 This is a fairly simple program that performs the following:
 - ingests a CSV file exported by Tableau
 - reshapes it from long to wide format
+- converts string dates/times to datetime format
 - drops the columns (chambers) we don't care about
 - drops incomplete rows (incomplete data)
-- calculate percent loss of incomplete rows
+- calculates percent loss of incomplete rows
 - writes the new dataframe to a CSV
 
 ## How to use
 
-Simply place this program in the same directory as your Tableau export and run: `python clean.py [filename].csv` replacing `[filename]` with your file name. The filename must end in `.csv`
+Simply place this program in the same directory as your Tableau export and run: 
 
-If you are missing dependencies, simply run `pip install -r requirements.txt`
+```
+python clean.py [filename].csv
+```
+
+replacing `[filename]` with your file name. The filename must end in `.csv`
+
+If you are missing dependencies, simply run 
+
+```
+pip install -r requirements.txt
+```
 
 ## Caveats
-This program is intended for use with time series datasets in which the datetime is your y-axis. Additionally, in my case the program was written to handle minute-my-minute data. You may need to modify, or eliminate, lines 49-54 to suit your particular needs:
+This program is intended for use with time series datasets in which the user would like the datetime to be on the y-axis. Additionally, in my case the program was written to handle minute-by-minute data. You may need to modify, or eliminate, lines 49-54 to suit your particular needs:
 
 ```py
 # Load CSV file (except tableau outputs tab-separated files, so set sep="\t")
@@ -62,6 +73,4 @@ Wide formats tend to be best for analysis, since a user can easily make calculat
 
 Long formats tend to be best for visualizations. Therefore, Tableau converts wide data to long data which is what I was getting when I exported the data set. Luckily, reshaping the data back to wide was primarily a matter of creating a pivot table.
 
-Typically, i would do this in Excel/Calc, but since the file was too big, I had to rely on Python and and Pandas library to handle such a large file.
-
-## How to use
+Typically, I would do this in Excel/Calc, but since the file was too big, I had to rely on Python and and Pandas library to handle such a large file.

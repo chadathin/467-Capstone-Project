@@ -56,7 +56,7 @@ def main():
     # PIVOT TO WIDE FORM
     print("Creating pivot table...")
     df_wide = df.pivot_table(index='Minute of Date And Time', columns='Chamber', values='Filtered Values')
-    
+
     # free up some memory, no longer need df
     del df
     
@@ -84,7 +84,7 @@ def main():
     # Get wide file size
     wide_file_stats = os.stat('out.csv')
     wide_file_size = wide_file_stats.st_size
-    
+        
     # Print summary
     print("\nWrite complete")
     print("Long file size: {}".format(convert_size(long_file_size)))
