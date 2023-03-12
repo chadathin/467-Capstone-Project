@@ -2,12 +2,14 @@
 
 ## What this program does
 This is a fairly simple program that performs the following:
-- ingests a CSV file exported by Tableau
-- reshapes it from long to wide format
+- ingests two CSV files exported by Tablueau
+    - One containing the temperature data
+    - One containing the set-point data
+- reshapes each from long to wide format with chambers on the x-axis
 - converts string dates/times to datetime format
-- drops the columns (chambers) we don't care about
-- drops incomplete rows (incomplete data)
-- calculates percent loss of incomplete rows
+- joints the two tables so the temperature table also contains the asymmetric setpoint data
+- drops rows in which Tr_02 contains a Null value
+    - Can't make comparisons with them, anyway
 - writes the new dataframe to a CSV
 
 ## How to use
@@ -15,10 +17,10 @@ This is a fairly simple program that performs the following:
 Simply place this program in the same directory as your Tableau export and run: 
 
 ```
-python clean.py [filename].csv
+python clean.py [filename1].csv [filename2].csv [output].csv
 ```
 
-replacing `[filename]` with your file name. The filename must end in `.csv`
+replacing bracketed items with your file names. The filenames must end in `.csv`
 
 If you are missing dependencies, simply run 
 
@@ -31,9 +33,9 @@ This program is intended for use with time series datasets in which the user wou
 
 ```py
 # Load CSV file (except tableau outputs tab-separated files, so set sep="\t")
-print("Importing CSV file...")
-df = pd.read_csv(args[0], index_col = 'Minute of Date And Time', encoding='utf-16', sep="\t")
-    
+print("Importing {}...".format(fname))
+df = pd.read_csv(fname, index_col = 'Minute of Date And Time', encoding=enc, sep=sep)
+
 # Convert the date/time column (string) to datetime format
 print("Converting string date and time to datetime...")
 df.index = pd.to_datetime(df.index, format='%B %d, %Y at %I:%M %p')

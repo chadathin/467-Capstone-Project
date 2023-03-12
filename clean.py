@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import sys
 import math
+import chardet
 import numpy as np
 
 ambient_chambers = ["tr_02", "tr_06", "tr_10", "tr_14"]
@@ -21,34 +22,34 @@ def convert_size(size_bytes):
    s = round(size_bytes / p, 2)
    return "%s %s" % (s, size_name[i])
 
-def main():
-    '''
-    Takes in a CSV file produced by Tableau
-    Pivots from long form to wide form
-    Drops columns (chambers) we don't care about
-    Drops rows with incomplete data
-    Outputs pivoted data to new CSV file
-    '''
-    args = sys.argv[1:]
-    if len(args) == 0:
-        print("No filename given")
-        return 1
+def pivot(fname: str) -> pd.DataFrame:
+    """pivots a tab-separated file from long form to wide form
 
-    if (args[0][-4:]) != '.csv':
-        print("Invalid file type")
-        return 2
+    Args:
+        fname (str): Filename of .csv file to be pivoted
+
+    Returns:
+        pd.DataFrame: pandas DataFrame
+    """
     
-    try:
-        long_file_stats = os.stat(args[0])
-        long_file_size = long_file_stats.st_size
-    except:
-        print("File does not exist")
-        return 3
+    with open(fname, 'rb') as f:
+        raw_data = f.read(10000)
+        
+    
+    result = chardet.detect(raw_data)
+    enc = result["encoding"]
+    
+    with open(fname, 'r', encoding=enc) as f:
+        first_line = f.readline()
+        if ',' in first_line:
+            sep = ','
+        else:
+            sep = '\t'
     
     # Load CSV file (except tableau outputs tab-separated files, so set sep="\t")
-    print("Importing CSV file...")
-    df = pd.read_csv(args[0], index_col = 'Minute of Date And Time', encoding='utf-16', sep="\t")
-    
+    print("Importing {}...".format(fname))
+    df = pd.read_csv(fname, index_col = 'Minute of Date And Time', encoding=enc, sep=sep)
+
     # Convert the date/time column (string) to datetime format
     print("Converting string date and time to datetime...")
     df.index = pd.to_datetime(df.index, format='%B %d, %Y at %I:%M %p')
@@ -60,38 +61,86 @@ def main():
     # free up some memory, no longer need df
     del df
     
-    # Drop columns we don't care about (in this case, the asymmetric cols 4, 7, 9, 12)
-    print("Dropping chambers {}...".format(asymmetric_chambers))
-    df_wide = df_wide.drop(asymmetric_chambers, axis=1)
+    return df_wide
     
-    # How many rows before dropping incomplete data
-    before = len(df_wide)
-    
-    # Drop incomplete rows
-    print("Dropping incomplete rows...")
-    df_wide = df_wide.dropna()
-    
-    # Rows left after dropping incomplete data
-    after = len(df_wide)
 
-    # Per cent loss of incomplete data
-    loss = abs((after - before))/before
+def main():
+    '''
+    Takes in a CSV file produced by Tableau
+    Pivots from long form to wide form
+    Drops columns (chambers) we don't care about
+    Drops rows with incomplete data
+    Outputs pivoted data to new CSV file
+    '''
+    args = sys.argv[1:]
+    if len(args) == 0:
+        print("No infile1 given")
+        return 1
+
+    if len(args) < 2:
+        print("No infile2 given")
+        return 1
+
+    if (args[0][-4:]) != '.csv' or args[1][-4:] != '.csv':
+        print("Invalid file type")
+        return 2
+
+    if len(args) < 3:
+        outfile = "out.csv"
+        
+    if len(args) == 3:
+        # [0] = infile1
+        # [1] = infile2
+        # [2] = outfile
+        infile1 = args[0]
+        infile2 = args[1]
+        outfile = args[2]    
     
+    try:
+        long_file1_stats = os.stat(infile1)
+        long_file1_size = long_file1_stats.st_size
+    except:
+        print("File does not exist")
+        return 3
+    
+    try:
+        long_file2_stats = os.stat(infile2)
+        long_file2_size = long_file2_stats.st_size
+    except:
+        print("File does not exist")
+        return 3
+    
+    # pivot the temps
+    print("Pivoting {}...".format(infile1))
+    all_temps_df = pivot(infile1)
+    
+    
+    # pivot the set-points
+    print("Pivoting {}...".format(infile2))
+    set_points_df = pivot(infile2)
+
+    # calc the asym set-points
+    print("Calculating asymmetric set points...")
+    set_points_df['asym_sp'] = round(set_points_df['tr_04'] - set_points_df['tr_02'],2)
+    
+    # merge asym_sp's to the temps df
+    print("Merging set points into temp data...")
+    # all_temps_df = pd.merge(all_temps_df, set_points_df[['Minute of Date And Time', 'asym_sp']], on='Minute of Date And Time', how='left')
+    all_temps_df = all_temps_df.join(set_points_df['asym_sp'])
+
+    # Drop rows in which tr_02 is null (since we can't make any comparisons with them)
+    all_temps_df = all_temps_df.dropna(subset=['tr_02'])
+
     # Write out
-    print("Writing to 'out.csv'...")
-    df_wide.to_csv('out.csv')
+    print("Writing to '{}'...".format(outfile))
+    all_temps_df.to_csv(outfile)
     
     # Get wide file size
-    wide_file_stats = os.stat('out.csv')
+    wide_file_stats = os.stat(outfile)
     wide_file_size = wide_file_stats.st_size
         
-    # Print summary
     print("\nWrite complete")
-    print("Long file size: {}".format(convert_size(long_file_size)))
-    print("Wide file size: {}".format(convert_size(wide_file_size)))
-    print("Percent rows dropped (incomplete data): {:.2f}%\n".format(loss*100))
 
-    
     return 0
 
 if __name__ == "__main__":
