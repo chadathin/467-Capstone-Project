@@ -49,15 +49,20 @@ def pivot(fname: str) -> pd.DataFrame:
     # Load CSV file (except tableau outputs tab-separated files, so set sep="\t")
     print("Importing {}...".format(fname))
     df = pd.read_csv(fname, index_col = 'Minute of Date And Time', encoding=enc, sep=sep)
+    
+
 
     # Convert the date/time column (string) to datetime format
     print("Converting string date and time to datetime...")
     df.index = pd.to_datetime(df.index, format='%B %d, %Y at %I:%M %p')
+    print(df)
+    print(df.memory_usage())
     
     # PIVOT TO WIDE FORM
     print("Creating pivot table...")
     df_wide = df.pivot_table(index='Minute of Date And Time', columns='Chamber', values='Filtered Values')
-
+    print(df_wide)
+    print(df_wide.memory_usage())
     # free up some memory, no longer need df
     del df
     

@@ -69,7 +69,7 @@ To briefly summarize:
 - A long format contains values that do repeat in the first column.
 
 Take the two datasets below, both featuring the same data but in different formats (pulled form article linked above):
-![Wide vs Long format](https://www.statology.org/wp-content/uploads/2021/12/wideLong1-1.png)
+![Wide vs Long format](/assets/wideLong1-1.png)
 
 Wide formats tend to be best for analysis, since a user can easily make calculations across rows, or down columns.
 

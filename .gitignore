@@ -3,3 +3,4 @@ test.csv
 long_test.csv
 *.csv
 rem_na.py
+calc_size.py
