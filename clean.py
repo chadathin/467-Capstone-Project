@@ -10,6 +10,8 @@ symmetric_chambers = ["tr_03", "tr_05", "tr_11", "tr_13"]
 asymmetric_chambers = ["tr_04", "tr_07", "tr_09", "tr_12"]
 
 symmetric_warming = 3.5
+# Using all_temps.csv, Tr_2_4_sp.csv and day_night.csv => all_data_cleaned.py
+
 
 # Found this conversion function on StackOverflow
 # https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python
@@ -24,10 +26,8 @@ def convert_size(size_bytes):
 
 def pivot(fname: str) -> pd.DataFrame:
     """pivots a tab-separated file from long form to wide form
-
     Args:
         fname (str): Filename of .csv file to be pivoted
-
     Returns:
         pd.DataFrame: pandas DataFrame
     """
@@ -51,18 +51,14 @@ def pivot(fname: str) -> pd.DataFrame:
     df = pd.read_csv(fname, index_col = 'Minute of Date And Time', encoding=enc, sep=sep)
     
 
-
     # Convert the date/time column (string) to datetime format
     print("Converting string date and time to datetime...")
     df.index = pd.to_datetime(df.index, format='%B %d, %Y at %I:%M %p')
-    print(df)
-    print(df.memory_usage())
     
     # PIVOT TO WIDE FORM
     print("Creating pivot table...")
     df_wide = df.pivot_table(index='Minute of Date And Time', columns='Chamber', values='Filtered Values')
-    print(df_wide)
-    print(df_wide.memory_usage())
+
     # free up some memory, no longer need df
     del df
     
@@ -124,6 +120,12 @@ def main():
     print("Pivoting {}...".format(infile2))
     set_points_df = pivot(infile2)
 
+    # Read in day/night data
+    dn_df = pd.read_csv("day_night.csv", index_col='Minute of Date And Time',encoding="utf-16", sep="\t")
+    
+    # convert day/night string dates to datetimes
+    dn_df.index = pd.to_datetime(dn_df.index, format='%B %d, %Y at %I:%M %p')
+
     # calc the asym set-points
     print("Calculating asymmetric set points...")
     set_points_df['asym_sp'] = round(set_points_df['tr_04'] - set_points_df['tr_02'],2)
@@ -132,7 +134,10 @@ def main():
     print("Merging set points into temp data...")
     # all_temps_df = pd.merge(all_temps_df, set_points_df[['Minute of Date And Time', 'asym_sp']], on='Minute of Date And Time', how='left')
     all_temps_df = all_temps_df.join(set_points_df['asym_sp'])
-
+    
+    # merge day/night data
+    all_temps_df = all_temps_df.join(dn_df['Day/Night'])
+    
     # Drop rows in which tr_02 is null (since we can't make any comparisons with them)
     all_temps_df = all_temps_df.dropna(subset=['tr_02'])
 
