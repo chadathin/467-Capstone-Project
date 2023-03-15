@@ -9,6 +9,11 @@ ambient_chambers = ["tr_02", "tr_06", "tr_10", "tr_14"]
 symmetric_chambers = ["tr_03", "tr_05", "tr_11", "tr_13"]
 asymmetric_chambers = ["tr_04", "tr_07", "tr_09", "tr_12"]
 
+SET_POINT_FILE = "Tr_2_4_sp.csv"
+TEMP_FILE = "all_temps.csv"
+DAY_NIGHT_FILE = "day_night.csv"
+
+
 symmetric_warming = 3.5
 # Using all_temps.csv, Tr_2_4_sp.csv and day_night.csv => all_data_cleaned.py
 
@@ -32,13 +37,13 @@ def pivot(fname: str) -> pd.DataFrame:
         pd.DataFrame: pandas DataFrame
     """
     
+    # Get encoding (sometimes it's utf-8 and sometimes utf-16, for some reason)
     with open(fname, 'rb') as f:
         raw_data = f.read(10000)
-        
-    
     result = chardet.detect(raw_data)
     enc = result["encoding"]
     
+    # Determine if tab-separated or comma-separated
     with open(fname, 'r', encoding=enc) as f:
         first_line = f.readline()
         if ',' in first_line:
@@ -58,9 +63,6 @@ def pivot(fname: str) -> pd.DataFrame:
     # PIVOT TO WIDE FORM
     print("Creating pivot table...")
     df_wide = df.pivot_table(index='Minute of Date And Time', columns='Chamber', values='Filtered Values')
-
-    # free up some memory, no longer need df
-    del df
     
     return df_wide
     
@@ -69,8 +71,7 @@ def main():
     '''
     Takes in a CSV file produced by Tableau
     Pivots from long form to wide form
-    Drops columns (chambers) we don't care about
-    Drops rows with incomplete data
+    Currently drops rows in which Tr_02 has no data
     Outputs pivoted data to new CSV file
     '''
     args = sys.argv[1:]
@@ -90,9 +91,6 @@ def main():
         outfile = "out.csv"
         
     if len(args) == 3:
-        # [0] = infile1
-        # [1] = infile2
-        # [2] = outfile
         infile1 = args[0]
         infile2 = args[1]
         outfile = args[2]    
@@ -120,6 +118,10 @@ def main():
     print("Pivoting {}...".format(infile2))
     set_points_df = pivot(infile2)
 
+    '''
+    Day/Night data already in usable format
+    Does not need to be pivoted, but does need datetime conversion
+    '''
     # Read in day/night data
     dn_df = pd.read_csv("day_night.csv", index_col='Minute of Date And Time',encoding="utf-16", sep="\t")
     
@@ -127,18 +129,17 @@ def main():
     dn_df.index = pd.to_datetime(dn_df.index, format='%B %d, %Y at %I:%M %p')
 
     # calc the asym set-points
-    print("Calculating asymmetric set points...")
+    print("Calculating asymmetric set points modifiers...")
     set_points_df['asym_sp'] = round(set_points_df['tr_04'] - set_points_df['tr_02'],2)
     
     # merge asym_sp's to the temps df
     print("Merging set points into temp data...")
-    # all_temps_df = pd.merge(all_temps_df, set_points_df[['Minute of Date And Time', 'asym_sp']], on='Minute of Date And Time', how='left')
     all_temps_df = all_temps_df.join(set_points_df['asym_sp'])
     
     # merge day/night data
     all_temps_df = all_temps_df.join(dn_df['Day/Night'])
     
-    # Drop rows in which tr_02 is null (since we can't make any comparisons with them)
+    # Drop rows in which tr_02 is none/empty (since we can't make any comparisons with them)
     all_temps_df = all_temps_df.dropna(subset=['tr_02'])
 
     # Write out
